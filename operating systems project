@@ -8,35 +8,32 @@
 
 #define str_in_dt_sz 1024 //string input data size
 
-/*--------------Read txt file and parse it into the linked list-----Start---Above Main Fn-----------------*/
-void error_message() {
+
+void perror_message() {
   printf("Required: -f <fileInName.txt> | -o f<ileOutName.txt>\n");
   exit(2);
 }
 
 typedef struct process {
-  int title; //Stores process ID
-  int burt_time;
-  int arrival_time;
+  int title; 
+  int burst;
+  int arrive;
   int priority;
-  int wainting_time;
+  int wait;
   struct process * next;
 }
 p;
-static int num = 0; //Assign an id to a newly created process
+static int num = 0; 
 
-//Function Prototype
 struct process * createNode(int b_t, int a_t, int priorty);
 struct process * insertBack(struct process * header, int b_t, int a_t, int priorty);
 void display(struct process * header);
-struct process * build_llist(char * in_txt, struct process * hdr); //gets data from file and fills up the linked list
-/*--------------Read txt file and parse it into the linked list-----End--------------------*/
+struct process * build_llist(char * in_txt, struct process * hdr); 
 
-/*--------------Interface-----Start---Prototype declaration & variables-----------------*/
-int s_m_vl = 0, p_m_vl = 0, quantum = 0; //scheduling method value, premptive method value, quantum time
-char sch_vl[10], premt_vl[10]; //sch_vl = {None, FCFS, SJF, Priority, RR} || premt_vl = {1 : ON, 2 : OFF}
-struct process * header = NULL; //original linked list root
-struct process * cp_h; //cloned linked list
+int s_m_vl = 0, p_m_vl = 0, quantum = 0; 
+char sch_vl[10], premt_vl[10]; 
+struct process * header = NULL; 
+struct process * cp_h; 
 
 int rr_time(); //prompt for the quantum time
 void firstMenu(int * s_m_arg, int * p_m_arg); //display the main menu
@@ -45,19 +42,42 @@ void premptive(); //
 
 /*--------------Interface-----End---Prototype declaration & variables-----------------*/
 
-struct process * cloneList(struct process * head); /*--------------Cloning LL----------*/
+struct process * cloneList(struct process * head); 
 
 /*---------Schduling Algorithm---Start---Prototype-------------*/
 void algorithmExecution(int sch_choice, int premtp_choice); //Perform various algorithms based on the user's choice
-void FCFS();
+void FCFS() {
+  struct process * cp = cloneList(header);
+ 
+  struct process * temp = NULL;
+  temp = cp;
+  int sum_wt = 0, prev_bt = 0, num_proc = 0;
+  float avg = 0;
+
+  while (temp != NULL) {
+    if (temp == cp) {
+      temp -> wainting_time = 0;
+      prev_bt = temp -> burst;
+    } else {
+      temp -> waiting = prev_bt;
+      sum_wt += temp -> wait;
+      prev_bt += temp -> burst;
+    }
+    printf("P%d: ", temp -> title);
+    printf("%d ms\n", temp -> wait);
+    temp = temp -> next;
+    num_proc++;
+  }
+  avg = (float) sum_wt / (float) num_proc;
+  printf("Average Waiting Time: %.1f\n", avg);
+}
+
 void SJF_Preempt(struct process * cp);
 void SJF_N_Preempt();
 void Priority_Preempt(struct process * cp);
 void Priority_N_Preempt();
 void RR(struct process * cp);
-/*---------Schduling Algorithm---End---Prototype-------------*/
 
-/*-----------SJF Non Preemptive Fn Prototype.----------------*/
 void swap(struct process * a, struct process * b);
 void sortProcess(struct process * h);
 void FCFS_Algo(struct process * h);
@@ -67,11 +87,11 @@ void sortPriority(struct process * h);
 
 int main(int argc, char * argv[]) {
 
-  if (argc < 4) { //ensures that the number of arguments is not less than 4
+  if (argc < 4) { 
     error_message();
   }
 
-  int optionInput; //Getopt var. holder
+  int optionInput; 
   char * in_fl, * out_fl;
 
   while ((optionInput = getopt(argc, argv, "f:o:")) != -1) { //prompt the user for the input and output file
@@ -90,23 +110,21 @@ int main(int argc, char * argv[]) {
 
   }
 
-  header = build_llist(in_fl, header); //Handle reading from file and fill linkedlist
-  firstMenu( & s_m_vl, & p_m_vl); //calling the interface function
-  //display(header); //Test and ensure that header has a copy of the original data
+  header = build_llist(in_fl, header); 
+  firstMenu( & s_m_vl, & p_m_vl); 
   cp_h = cloneList(header);
-  //display(cp_h); //cp_h has cloned successfully header
-  //printf("\nYou selected-Method:%d &&Option: %d\n", s_m_vl, p_m_vl);
+  
 
   exit(0);
 }
 
-/*--------------Interface-----Start---Function implementation-----------------*/
+
 struct process * build_llist(char * in_txt, struct process * hdr) {
   FILE * spin;
   int b_t, a_t, priority;
   char in [str_in_dt_sz];
 
-  spin = fopen(in_txt, "r"); //open file in reading mode
+  spin = fopen(in_txt, "r"); 
 
   if (!spin) {
     printf("Could not open file\n");
@@ -115,13 +133,12 @@ struct process * build_llist(char * in_txt, struct process * hdr) {
 
   while (fgets( in , 1024, spin)) {
 
-    b_t = atoi(strtok( in , ":")); //stores digits bfr the ':'
-    a_t = atoi(strtok(NULL, ":")); //stores digits bfr the ':' starting at the point it left off
+    b_t = atoi(strtok( in , ":")); 
+    a_t = atoi(strtok(NULL, ":")); 
     priority = atoi(strtok(NULL, "\n"));
     hdr = insertBack(hdr, b_t, a_t, priority);
   }
 
-  //display(hdr);//Test 
   return hdr;
 
 }
@@ -130,8 +147,8 @@ struct process * createNode(int b_t, int a_t, int priorty) {
   struct process * temp;
   temp = (struct process * ) malloc(sizeof(struct process));
   temp -> title = ++num;
-  temp -> burt_time = b_t;
-  temp -> arrival_time = a_t;
+  temp -> burst = b_t;
+  temp -> arrive= a_t;
   temp -> priority = priorty;
   temp -> next = NULL;
 
@@ -140,9 +157,8 @@ struct process * createNode(int b_t, int a_t, int priorty) {
 
 struct process * insertBack(struct process * header, int b_t, int a_t, int priorty) {
 
-  //create node
   struct process * temp = createNode(b_t, a_t, priorty);
-  struct process * headertemp; //start a 1st node
+  struct process * headertemp;
   if (header == NULL) {
     header = temp;
     return header;
@@ -163,22 +179,21 @@ void display(struct process * header) {
     puts("List is emplty");
   struct process * temp = header;
   while (temp != NULL) {
-    printf("Process%d: %d-%d-%d -->", temp -> title, temp -> burt_time, temp -> arrival_time, temp -> priority);
+    printf("Process%d: %d-%d-%d -->", temp -> title, temp -> burst, temp -> arrive, temp -> priorty);
     temp = temp -> next;
   }
   puts("");
 }
 
-/*--------------Interface-----Start---Function implementation-----------------*/
-int rr_time() { // Calculate the rr quantum time
-  int dur = 0; //duration
+int rr_time() { 
+  int dur = 0; 
   printf("You have selected RR, now insert the duration: ");
   scanf("%d", & dur);
   quantum = dur;
   return dur;
 }
 
-void firstMenu(int * s_m_arg, int * p_m_arg) { // Displays the main menu
+void firstMenu(int * s_m_arg, int * p_m_arg) 
 
   int u_choice = 0;
 
@@ -204,8 +219,6 @@ void firstMenu(int * s_m_arg, int * p_m_arg) { // Displays the main menu
     strcpy(sch_vl, "None");
     break;
   }
-
-  //printf("premt: %d\n", p_m_vl);
   switch ( * p_m_arg) {
   case 0:
     strcpy(premt_vl, "Off");
@@ -229,7 +242,7 @@ void firstMenu(int * s_m_arg, int * p_m_arg) { // Displays the main menu
   switch (u_choice) {
   case 1:
     puts("You chose: Scheduling Method(None) ");
-    schedulingMethod(); //returns #
+    schedulingMethod(); 
 
     break;
   case 2:
@@ -237,14 +250,14 @@ void firstMenu(int * s_m_arg, int * p_m_arg) { // Displays the main menu
     premptive();
     break;
   case 3:
-    //printf("")
+    
     algorithmExecution(s_m_vl, p_m_vl);
     s_m_vl = p_m_vl = 0;
-    firstMenu( & s_m_vl, & p_m_vl); //takes us back to the main menu
+    firstMenu( & s_m_vl, & p_m_vl); 
     break;
   case 4:
     puts("You chose: End the program");
-    //Should display the avg and waiting time of each process and write to the output.txt
+   
     break;
 
   default:
@@ -253,10 +266,8 @@ void firstMenu(int * s_m_arg, int * p_m_arg) { // Displays the main menu
   }
 }
 
-void schedulingMethod() { // Various scheduling methods
-  int u_choice = 0; //user choice
-
-  //output string
+void schedulingMethod() { 
+  int u_choice = 0; 
   char o_str[] = "\tCPU Scheduler Simulator\n1) First Come, First Served Scheduling\n2) Shortest-Job-First Scheduling\n3) Priority Scheduling\n4) Round-Robin Scheduling (You should also obtain time quantum value)\nOption >";
   printf("\n%s", o_str);
   scanf("%d", & u_choice);
@@ -282,10 +293,10 @@ void schedulingMethod() { // Various scheduling methods
   }
 
   s_m_vl = u_choice;
-  firstMenu( & s_m_vl, & p_m_vl); //Takes you back to the main menu
+  firstMenu( & s_m_vl, & p_m_vl); 
 }
 
-void premptive() { //Returns the boolean equivalent of the preemptive option
+void premptive() { 
   int isPremptive = 0;
 
   char o_str[] = "\tCPU Scheduler Simulator\n1) Preemptive ON\n2) Preemptive OFF\nOption >";
@@ -307,12 +318,9 @@ void premptive() { //Returns the boolean equivalent of the preemptive option
     break;
   }
   p_m_vl = isPremptive;
-  //printf("isPremtive: %d", p_m_vl);
-  firstMenu( & s_m_vl, & p_m_vl); //Takes you back to the main menu
+  firstMenu( & s_m_vl, & p_m_vl); 
 }
-/*--------------Interface-----End---Function implementation-----------------*/
 
-/*---------Cloning the Linkedlist---Start---Function implementation-------------*/
 struct process * cloneList(struct process * head) {
 
   struct process * current = head;
@@ -323,8 +331,8 @@ struct process * cloneList(struct process * head) {
     if (newList == NULL) {
       newList = (struct process * ) malloc(sizeof(struct process));
       newList -> title = current -> title;
-      newList -> burt_time = current -> burt_time;
-      newList -> arrival_time = current -> arrival_time;
+      newList -> burst = current -> burst;
+      newList -> arrive = current -> arrive;
       newList -> priority = current -> priority;
 
       newList -> next = NULL;
@@ -333,8 +341,8 @@ struct process * cloneList(struct process * head) {
       tail -> next = (struct process * ) malloc(sizeof(struct process));
       tail = tail -> next;
       tail -> title = current -> title;
-      tail -> burt_time = current -> burt_time;
-      tail -> arrival_time = current -> arrival_time;
+      tail -> burst= current -> burst;
+      tail -> arrive = current -> arrive;
       tail -> priority = current -> priority;
       tail -> next = NULL;
     }
@@ -342,12 +350,10 @@ struct process * cloneList(struct process * head) {
   }
   return newList;
 }
-/*---------Cloning the Linkedlist---End---Function implementation-------------*/
 
-/*---------Schduling Algorithm---Start---Function implementation-------------*/
 void algorithmExecution(int sch_choice, int premtp_choice) {
 
-  if (sch_choice == 1 && premtp_choice == 0) { //FCFS 
+  if (sch_choice == 1 && premtp_choice == 0) { 
 
     FCFS();
   } else if (sch_choice == 1 && premtp_choice == 1) {
@@ -366,32 +372,6 @@ void algorithmExecution(int sch_choice, int premtp_choice) {
 
 }
 
-void FCFS() {
-  struct process * cp = cloneList(header);
-  //display(cp);
-  //puts("FCFS called");
-  struct process * temp = NULL;
-  temp = cp;
-  int sum_wt = 0, prev_bt = 0, num_proc = 0;
-  float avg = 0;
-
-  while (temp != NULL) {
-    if (temp == cp) {
-      temp -> wainting_time = 0;
-      prev_bt = temp -> burt_time;
-    } else {
-      temp -> wainting_time = prev_bt;
-      sum_wt += temp -> wainting_time;
-      prev_bt += temp -> burt_time;
-    }
-    printf("P%d: ", temp -> title);
-    printf("%d ms\n", temp -> wainting_time);
-    temp = temp -> next;
-    num_proc++;
-  }
-  avg = (float) sum_wt / (float) num_proc;
-  printf("Average Waiting Time: %.1f\n", avg);
-}
 
 void SJF_N_Preempt() {
   puts("SJF Non Preempt.");
@@ -422,38 +402,38 @@ void RR(struct process * cp) {
 /*------------SJF relying fn implementation*/
 void swap(struct process * a, struct process * b) {
   int t_title = a -> title; //Stores process number
-  int t_burt_time = a -> burt_time;
-  int t_arrival_time = a -> arrival_time;
+  int t_burst = a -> burst; //
+  int t_arrival_time = a -> arrive;
   int t_priority = a -> priority;
-  int t_w_t = a -> wainting_time;
+  int t_w_t = a -> wait;
 
   a -> title = b -> title;
-  a -> burt_time = b -> burt_time;
-  a -> arrival_time = b -> arrival_time;
+  a -> burst= b -> burst;
+  a -> arrive= b -> arrive;
   a -> priority = b -> priority;
-  a -> wainting_time = b -> wainting_time;
+  a -> wait = b -> wait;
 
   b -> title = t_title;
-  b -> burt_time = t_burt_time;
-  b -> arrival_time = t_arrival_time;
+  b -> burst = t_burt_time;
+  b -> arrive = t_arrival_time;
   b -> priority = t_priority;
-  b -> wainting_time = t_w_t;
+  b -> wait = t_w_t;
 }
 void sortProcess(struct process * h) {
-  struct process * ht; //header temp
-  struct process * an = NULL; //after node
+  struct process * ht; 
+  struct process * an = NULL; 
   int is_sp;
 
-  /* Checking for empty list */
+  
   if (ht == NULL)
     return;
 
-  do { //outter loop
+  do { 
     is_sp = 0;
     ht = h;
 
-    while (ht -> next != an) { //inner loop
-      if (ht -> burt_time > ht -> next -> burt_time) {
+    while (ht -> next != an) { 
+      if (ht -> burst > ht -> next -> burst) {
         swap(ht, ht -> next);
         is_sp = 1;
       }
@@ -474,15 +454,15 @@ void FCFS_Algo(struct process * h) {
 
   while (temp != NULL) {
     if (temp == cp) {
-      temp -> wainting_time = 0;
-      prev_bt = temp -> burt_time;
+      temp -> wait= 0;
+      prev_bt = temp -> burst;
     } else {
-      temp -> wainting_time = prev_bt;
-      sum_wt += temp -> wainting_time;
-      prev_bt += temp -> burt_time;
+      temp -> wait = prev_bt;
+      sum_wt += temp -> wait;
+      prev_bt += temp -> burst;
     }
     printf("P%d: ", temp -> title);
-    printf("%d ms\n", temp -> wainting_time);
+    printf("%d ms\n", temp -> wait);
     temp = temp -> next;
     num_proc++;
   }
@@ -491,20 +471,18 @@ void FCFS_Algo(struct process * h) {
 }
 
 void sortPriority(struct process * h) {
-  //int i;
-  struct process * ht; //header temp
-  struct process * an = NULL; //after node
+  
+  struct process * ht; 
+  struct process * an = NULL; 
   int is_sp;
-
-  /* Checking for empty list */
   if (ht == NULL)
     return;
 
-  do { //outter loop
+  do { 
     is_sp = 0;
     ht = h;
 
-    while (ht -> next != an) { //inner loop
+    while (ht -> next != an) { 
       if (ht -> priority > ht -> next -> priority) {
         swap(ht, ht -> next);
         is_sp = 1;
